@@ -14,3 +14,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # 4. Temel Kalıp (Base): İleride oluşturacağımız tabloların (örn: Kullanıcılar, Fotoğraflar) şablonu
 Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db  # İşlem bitene kadar bağlantıyı açık tut
+    finally:
+        db.close() # İşlem bitince (veya hata çıkarsa) kapıyı kesinlikle kapat
