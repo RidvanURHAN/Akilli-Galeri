@@ -7,9 +7,7 @@ from database import get_db
 # Ana uygulamaya (app) bağlı bir alt yönlendirici oluşturuyoruz
 router = APIRouter()
 
-@router.get("/")
-def ana_sayfa():
-    return {"mesaj": "Akilli Galeri projesinin kalbi atmaya basladi!"}
+
 
 @router.post("/soru_sor/")
 def soru_kaydet(mesaj: schemas.KullaniciMesaji, db: Session = Depends(get_db)):

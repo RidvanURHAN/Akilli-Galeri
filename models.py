@@ -11,3 +11,12 @@ class KullaniciSorusu(Base):
     isim = Column(String, index=True)                  # Kullanıcının adı
     soru = Column(String)                              # Sorduğu soru
     cevap = Column(String, nullable=True)              # Sistemin vereceği cevap (Başlangıçta boş olabilir)
+
+    from sqlalchemy import Column, Integer, String
+
+class Foto(Base):
+    __tablename__ = "fotograflar"
+    id = Column(Integer, primary_key=True, index=True)
+    baslik = Column(String)
+    aciklama = Column(String)
+    dosya_yolu = Column(String)

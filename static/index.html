@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akıllı Galeri</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        .container { max-width: 1200px; margin: 0 auto; display: flex; gap: 30px; flex-wrap: wrap; }
+        .sidebar { flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content; }
+        .gallery-area { flex: 3; min-width: 600px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;}
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit;}
+        button { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background-color: #2980b9; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);}
+        .search-bar input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px;}
+        .search-bar button { width: auto; margin-top: 0; padding: 12px 25px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column;}
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1);}
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .card-content { padding: 15px; flex-grow: 1; }
+        .card-title { font-weight: bold; margin-bottom: 8px; font-size: 18px; color: #2c3e50;}
+        .card-desc { color: #7f8c8d; font-size: 14px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <h1>📸 Akıllı Galeri Yapay Zeka Arama</h1>
+    <div class="container">
+        <div class="sidebar">
+            <h3 style="margin-top: 0; color: #2c3e50;">Yeni Fotoğraf Ekle</h3>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label>Başlık</label>
+                    <input type="text" id="baslik" placeholder="Örn: Dağ Manzarası" required>
+                </div>
+                <div class="form-group">
+                    <label>Açıklama (Yapay Zeka İçin Önemli!)</label>
+                    <textarea id="aciklama" rows="4" placeholder="Örn: Karlı dağların arkasından batan güneş..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Fotoğraf Seç</label>
+                    <input type="file" id="dosya" accept="image/*" required>
+                </div>
+                <button type="submit">Yükle ve Vektöre Çevir</button>
+            </form>
+            <div id="uploadStatus" style="margin-top:15px; font-size: 14px; font-weight: bold; text-align: center;"></div>
+        </div>
+
+        <div class="gallery-area">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Yapay zekaya sorun... (Örn: Ormanda koşan köpek)">
+                <button onclick="ara()">Akıllı Ara</button>
+                <button onclick="tumFotograflariYukle()" style="background-color: #95a5a6;">Sıfırla</button>
+            </div>
+            <div class="grid" id="galleryGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", tumFotograflariYukle);
+
+        async function tumFotograflariYukle() {
+            document.getElementById('searchInput').value = '';
+            try {
+                const response = await fetch('/fotograflar/');
+                const data = await response.json();
+                galeriyiCiz(data);
+            } catch (error) { console.error("Yükleme hatası:", error); }
+        }
+
+        async function ara() {
+            const sorgu = document.getElementById('searchInput').value;
+            if (!sorgu) return tumFotograflariYukle();
+            
+            try {
+                // 1. DÜZELTME: Endpoint adresini galeri.py'deki ile eşitledik (/ara/)
+                const response = await fetch(`/ara/?sorgu=${encodeURIComponent(sorgu)}`);
+                const data = await response.json();
+                
+                // 2. DÜZELTME: Gelen veri paketinin içinden sadece "sonuclar" listesini alıp çizdiriyoruz
+                if (data.sonuclar) {
+                    galeriyiCiz(data.sonuclar); 
+                } else if (data.mesaj) {
+                    // Eğer "Galeri boş veya sonuç bulunamadı" mesajı geldiyse galeriyi boşalt
+                    galeriyiCiz([]);
+                } else {
+                    galeriyiCiz(data); 
+                }
+            } catch (error) { 
+                console.error("Arama hatası:", error); 
+            }
+        }
+
+        function galeriyiCiz(fotograflar) {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = ''; 
+            if (fotograflar.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #7f8c8d;">Hiç fotoğraf bulunamadı.</p>';
+                return;
+            }
+            fotograflar.forEach(foto => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <img src="/${foto.dosya_yolu}" alt="${foto.baslik}">
+                    <div class="card-content">
+                        <div class="card-title">${foto.baslik}</div>
+                        <div class="card-desc">${foto.aciklama}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerText = "Yapay zeka analiz ediyor, lütfen bekleyin...";
+            statusDiv.style.color = "#f39c12";
+
+            const formData = new FormData();
+            formData.append('baslik', document.getElementById('baslik').value);
+            formData.append('aciklama', document.getElementById('aciklama').value);
+            formData.append('dosya', document.getElementById('dosya').files[0]);
+
+            try {
+                const response = await fetch('/foto-ekle/', { method: 'POST', body: formData });
+                if (response.ok) {
+                    statusDiv.innerText = "✅ Başarıyla yüklendi!";
+                    statusDiv.style.color = "#27ae60";
+                    document.getElementById('uploadForm').reset();
+                    tumFotograflariYukle();
+                } else {
+                    statusDiv.innerText = "❌ Yükleme hatası!";
+                    statusDiv.style.color = "#e74c3c";
+                }
+            } catch (error) {
+                statusDiv.innerText = "❌ Sunucuya ulaşılamadı.";
+                statusDiv.style.color = "#e74c3c";
+            }
+            setTimeout(() => { statusDiv.innerText = ""; }, 4000);
+        });
+    </script>
+</body>
+</html>

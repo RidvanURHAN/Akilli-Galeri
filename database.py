@@ -1,23 +1,39 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+import chromadb # Yeni ekledik
 
-# 1. Veritabanımızın adresi (SQLite kullanacağımız için bilgisayardaki bir dosya yolu)
+# ==========================================
+# 1. MOTOR: KLASİK VERİTABANI (SQLITE)
+# ==========================================
 SQLALCHEMY_DATABASE_URL = "sqlite:///./galeri.db"
 
-# 2. Motor (Engine): Python ile veritabanı arasındaki köprüyü kurar
+# SQLite için engine ve session ayarları
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
-
-# 3. Oturum (Session): Veritabanıyla her konuşmak istediğimizde açacağımız geçici bağlantı
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# 4. Temel Kalıp (Base): İleride oluşturacağımız tabloların (örn: Kullanıcılar, Fotoğraflar) şablonu
 Base = declarative_base()
 
+# FastAPI Router'ları için SQLite Bağımlılığı (Dependency)
 def get_db():
     db = SessionLocal()
     try:
-        yield db  # İşlem bitene kadar bağlantıyı açık tut
+        yield db
     finally:
-        db.close() # İşlem bitince (veya hata çıkarsa) kapıyı kesinlikle kapat
+        db.close()
+
+# ==========================================
+# 2. MOTOR: VEKTÖR VERİTABANI (CHROMADB)
+# ==========================================
+# PersistentClient sunucu ayağa kalktığında bir kez çalışır ve diske bağlanır.
+# Bu sayede her istekte veritabanına baştan bağlanıp sistemi yormayız.
+chroma_client = chromadb.PersistentClient(path="./chroma_data")
+
+# Koleksiyonumuzu global olarak oluşturuyoruz (yoksa yaratır, varsa getirir)
+chroma_collection = chroma_client.get_or_create_collection(name="galeri_hafizasi")
+
+# FastAPI Router'ları için ChromaDB Bağımlılığı (Dependency)
+def get_chroma():
+    # Bu fonksiyon sayesinde router'larda Depends(get_chroma) diyerek
+    # koleksiyonu çok temiz bir şekilde çağırabileceğiz.
+    return chroma_collection

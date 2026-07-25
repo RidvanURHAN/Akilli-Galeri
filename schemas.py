@@ -6,3 +6,8 @@ class KullaniciMesaji(BaseModel):
 
 class CevapMesaji(BaseModel):
     cevap: str
+
+class FotoOlustur(BaseModel):
+    baslik: str
+    aciklama: str
+    dosya_yolu: str
