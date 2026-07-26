@@ -3,147 +3,434 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akıllı Galeri</title>
+    <title>Galeri AI | Yeni Nesil</title>
+    <!-- Modern Geometrik Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
-        .container { max-width: 1200px; margin: 0 auto; display: flex; gap: 30px; flex-wrap: wrap; }
-        .sidebar { flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content; }
-        .gallery-area { flex: 3; min-width: 600px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;}
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit;}
-        button { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-top: 10px; }
-        button:hover { background-color: #2980b9; }
-        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);}
-        .search-bar input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px;}
-        .search-bar button { width: auto; margin-top: 0; padding: 12px 25px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column;}
-        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1);}
-        .card img { width: 100%; height: 200px; object-fit: cover; }
-        .card-content { padding: 15px; flex-grow: 1; }
-        .card-title { font-weight: bold; margin-bottom: 8px; font-size: 18px; color: #2c3e50;}
-        .card-desc { color: #7f8c8d; font-size: 14px; line-height: 1.4; }
+        /* --- YENİ NESİL RENK VE TEMA AYARLARI --- */
+        :root {
+            --bg-page: #f8fafc;
+            --surface: #ffffff;
+            --text-dark: #0f172a;
+            --text-gray: #64748b;
+            --accent: #10b981; /* Zümrüt Yeşili Accent */
+            --accent-hover: #059669;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- ÜST MENÜ (HEADER) VE ARAMA --- */
+        header {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 15px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i { color: var(--accent); }
+
+        .search-wrapper {
+            flex: 0 1 500px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-wrapper input {
+            width: 100%;
+            padding: 14px 20px 14px 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 1rem;
+            background-color: var(--bg-page);
+            transition: all 0.3s;
+        }
+
+        .search-wrapper input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background-color: var(--surface);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            color: var(--text-gray);
+            font-size: 1.1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary { background-color: var(--accent); color: white; }
+        .btn-primary:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+        
+        .btn-outline { background-color: transparent; border: 2px solid #e2e8f0; color: var(--text-dark); }
+        .btn-outline:hover { background-color: #f1f5f9; }
+
+        /* --- ANA GALERİ ALANI --- */
+        main {
+            padding: 40px;
+            flex: 1;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        /* YENİ KART TASARIMI (OVERLAY) */
+        .photo-card {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #e2e8f0;
+            aspect-ratio: 4/3;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .photo-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 25px;
+            color: white;
+        }
+
+        .photo-card:hover img { transform: scale(1.08); }
+        .photo-card:hover .photo-overlay { opacity: 1; }
+
+        .photo-overlay h3 { font-size: 1.3rem; margin-bottom: 5px; font-weight: 600; }
+        .photo-overlay p { font-size: 0.9rem; color: #cbd5e1; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        .card-actions { display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn-delete-icon {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: none;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-delete-icon:hover { background: var(--danger); color: white; transform: scale(1.1); }
+
+        .alaka-skoru {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* --- POP-UP (MODAL) EKLEME EKRANI --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(5px);
+            display: none; /* Varsayılan olarak gizli */
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active { display: flex; opacity: 1; }
+
+        .modal-content {
+            background: var(--surface);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h2 { font-size: 1.5rem; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; color: var(--text-gray); cursor: pointer; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+        .form-group input[type="text"], .form-group textarea {
+            width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 1rem;
+        }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        
+        .file-upload-box {
+            border: 2px dashed #cbd5e1;
+            padding: 30px;
+            text-align: center;
+            border-radius: 16px;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-upload-box:hover { border-color: var(--accent); background: #f0fdf4; }
+        .file-upload-box i { font-size: 2.5rem; color: var(--text-gray); margin-bottom: 10px; display: block; }
+        
+        .modal-footer { margin-top: 30px; display: flex; gap: 10px; }
+        .modal-footer .btn { flex: 1; justify-content: center; }
+
     </style>
 </head>
 <body>
-    <h1>📸 Akıllı Galeri Yapay Zeka Arama</h1>
-    <div class="container">
-        <div class="sidebar">
-            <h3 style="margin-top: 0; color: #2c3e50;">Yeni Fotoğraf Ekle</h3>
+
+    <!-- YÜZEN ÜST MENÜ -->
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-leaf"></i> Galeri AI
+        </div>
+        
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="sorgu" placeholder="Ne görmek istersiniz? (Örn: Deniz kenarında bir ev)" onkeydown="if(event.key === 'Enter') fotoAra()">
+        </div>
+
+        <div class="header-actions">
+            <button onclick="fotograflariGetir()" class="btn btn-outline" title="Sıfırla">
+                <i class="fa-solid fa-house"></i>
+            </button>
+            <button onclick="modalAc()" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> Yeni Ekle
+            </button>
+        </div>
+    </header>
+
+    <!-- ANA GALERİ -->
+    <main>
+        <div id="galeri" class="gallery-grid">
+            <!-- Fotoğraflar Buraya Eklenecek -->
+        </div>
+    </main>
+
+    <!-- YENİ EKLEME MODALI (POP-UP) -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Yapay Zekaya Görsel Yükle</h2>
+                <button class="close-modal" onclick="modalKapat()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
             <form id="uploadForm">
                 <div class="form-group">
                     <label>Başlık</label>
-                    <input type="text" id="baslik" placeholder="Örn: Dağ Manzarası" required>
+                    <input type="text" id="baslik" placeholder="Görselin kısa adı..." required>
                 </div>
+                
                 <div class="form-group">
-                    <label>Açıklama (Yapay Zeka İçin Önemli!)</label>
-                    <textarea id="aciklama" rows="4" placeholder="Örn: Karlı dağların arkasından batan güneş..." required></textarea>
+                    <label>Detaylı Yapay Zeka Açıklaması</label>
+                    <textarea id="aciklama" placeholder="Fotoğraftaki her detayı anlatın..." required></textarea>
                 </div>
-                <div class="form-group">
-                    <label>Fotoğraf Seç</label>
-                    <input type="file" id="dosya" accept="image/*" required>
-                </div>
-                <button type="submit">Yükle ve Vektöre Çevir</button>
-            </form>
-            <div id="uploadStatus" style="margin-top:15px; font-size: 14px; font-weight: bold; text-align: center;"></div>
-        </div>
 
-        <div class="gallery-area">
-            <div class="search-bar">
-                <input type="text" id="searchInput" placeholder="Yapay zekaya sorun... (Örn: Ormanda koşan köpek)">
-                <button onclick="ara()">Akıllı Ara</button>
-                <button onclick="tumFotograflariYukle()" style="background-color: #95a5a6;">Sıfırla</button>
-            </div>
-            <div class="grid" id="galleryGrid"></div>
+                <div class="form-group">
+                    <div class="file-upload-box" onclick="document.getElementById('dosya').click()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span id="file-name">Bilgisayardan bir fotoğraf seçin</span>
+                        <input type="file" id="dosya" accept="image/*" required style="display: none;" onchange="dosyaSecildi(this)">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="modalKapat()">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Kaydet ve İşle</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", tumFotograflariYukle);
+        document.addEventListener("DOMContentLoaded", fotograflariGetir);
 
-        async function tumFotograflariYukle() {
-            document.getElementById('searchInput').value = '';
+        // MODAL YÖNETİMİ
+        function modalAc() { document.getElementById("addModal").classList.add("active"); }
+        function modalKapat() { document.getElementById("addModal").classList.remove("active"); }
+        function dosyaSecildi(input) { 
+            const fileName = input.files[0] ? input.files[0].name : "Bilgisayardan bir fotoğraf seçin";
+            document.getElementById("file-name").innerText = fileName;
+        }
+
+        // FOTOĞRAFLARI GETİR
+        async function fotograflariGetir() {
+            document.getElementById("sorgu").value = "";
+            document.getElementById("galeri").innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #64748b;'>Fotoğraflar yükleniyor...</p>";
             try {
                 const response = await fetch('/fotograflar/');
                 const data = await response.json();
-                galeriyiCiz(data);
-            } catch (error) { console.error("Yükleme hatası:", error); }
+                arayuzuGuncelle(data);
+            } catch (error) {
+                console.error("Hata:", error);
+            }
         }
 
-        async function ara() {
-            const sorgu = document.getElementById('searchInput').value;
-            if (!sorgu) return tumFotograflariYukle();
-            
+        // ARAMA YAP
+        async function fotoAra() {
+            const sorgu = document.getElementById("sorgu").value;
+            if (!sorgu) return;
+
+            document.getElementById("galeri").innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #10b981;'><i class='fa-solid fa-spinner fa-spin'></i> AI Vektörleri tarıyor...</p>";
+
             try {
-                // 1. DÜZELTME: Endpoint adresini galeri.py'deki ile eşitledik (/ara/)
                 const response = await fetch(`/ara/?sorgu=${encodeURIComponent(sorgu)}`);
                 const data = await response.json();
                 
-                // 2. DÜZELTME: Gelen veri paketinin içinden sadece "sonuclar" listesini alıp çizdiriyoruz
-                if (data.sonuclar) {
-                    galeriyiCiz(data.sonuclar); 
-                } else if (data.mesaj) {
-                    // Eğer "Galeri boş veya sonuç bulunamadı" mesajı geldiyse galeriyi boşalt
-                    galeriyiCiz([]);
+                if (data.sonuclar && data.sonuclar.length > 0) {
+                    arayuzuGuncelle(data.sonuclar, true);
                 } else {
-                    galeriyiCiz(data); 
+                    document.getElementById("galeri").innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #64748b;"><i class="fa-regular fa-image" style="font-size: 3rem; margin-bottom:15px;"></i><h3>Sonuç Bulunamadı</h3></div>`;
                 }
-            } catch (error) { 
-                console.error("Arama hatası:", error); 
+            } catch (error) {
+                console.error("Arama hatası:", error);
             }
         }
 
-        function galeriyiCiz(fotograflar) {
-            const grid = document.getElementById('galleryGrid');
-            grid.innerHTML = ''; 
-            if (fotograflar.length === 0) {
-                grid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #7f8c8d;">Hiç fotoğraf bulunamadı.</p>';
-                return;
-            }
-            fotograflar.forEach(foto => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <img src="/${foto.dosya_yolu}" alt="${foto.baslik}">
-                    <div class="card-content">
-                        <div class="card-title">${foto.baslik}</div>
-                        <div class="card-desc">${foto.aciklama}</div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        // FOTOĞRAF YÜKLE
+        document.getElementById("uploadForm").addEventListener("submit", async function(e) {
             e.preventDefault();
-            const statusDiv = document.getElementById('uploadStatus');
-            statusDiv.innerText = "Yapay zeka analiz ediyor, lütfen bekleyin...";
-            statusDiv.style.color = "#f39c12";
+            const submitBtn = document.getElementById("submitBtn");
+            submitBtn.innerText = "Yükleniyor...";
+            submitBtn.disabled = true;
 
             const formData = new FormData();
-            formData.append('baslik', document.getElementById('baslik').value);
-            formData.append('aciklama', document.getElementById('aciklama').value);
-            formData.append('dosya', document.getElementById('dosya').files[0]);
+            formData.append("baslik", document.getElementById("baslik").value);
+            formData.append("aciklama", document.getElementById("aciklama").value);
+            formData.append("dosya", document.getElementById("dosya").files[0]);
 
             try {
                 const response = await fetch('/foto-ekle/', { method: 'POST', body: formData });
                 if (response.ok) {
-                    statusDiv.innerText = "✅ Başarıyla yüklendi!";
-                    statusDiv.style.color = "#27ae60";
-                    document.getElementById('uploadForm').reset();
-                    tumFotograflariYukle();
+                    this.reset();
+                    document.getElementById("file-name").innerText = "Bilgisayardan bir fotoğraf seçin";
+                    modalKapat();
+                    fotograflariGetir();
                 } else {
-                    statusDiv.innerText = "❌ Yükleme hatası!";
-                    statusDiv.style.color = "#e74c3c";
+                    alert("Yükleme başarısız oldu.");
                 }
             } catch (error) {
-                statusDiv.innerText = "❌ Sunucuya ulaşılamadı.";
-                statusDiv.style.color = "#e74c3c";
+                console.error("Yükleme hatası:", error);
+            } finally {
+                submitBtn.innerText = "Kaydet ve İşle";
+                submitBtn.disabled = false;
             }
-            setTimeout(() => { statusDiv.innerText = ""; }, 4000);
         });
+
+        // FOTOĞRAF SİL
+        async function fotoSil(id, event) {
+            event.stopPropagation(); // Karta tıklama olayını engelle
+            if (!confirm("Bu fotoğrafı kalıcı olarak silmek istediğinize emin misiniz?")) return; 
+
+            try {
+                const response = await fetch(`/foto-sil/${id}`, { method: 'DELETE' });
+                if (response.ok) fotograflariGetir(); 
+            } catch (error) {
+                console.error("Silme hatası:", error);
+            }
+        }
+
+        // ARAYÜZÜ ÇİZ (YENİ OVERLAY KART YAPISI)
+        function arayuzuGuncelle(fotograflar, isSearchResult = false) {
+            const galeriDiv = document.getElementById("galeri");
+            galeriDiv.innerHTML = ""; 
+
+            if(fotograflar.length === 0) {
+                galeriDiv.innerHTML = "<div style='grid-column: 1/-1; text-align: center; color: #64748b;'>Galeri henüz boş. Sağ üstten yeni bir fotoğraf ekleyin.</div>";
+                return;
+            }
+
+            fotograflar.forEach(foto => {
+                const kart = document.createElement("div");
+                kart.className = "photo-card";
+                
+                const resimUrl = foto.dosya_yolu.startsWith('/') ? foto.dosya_yolu : `/${foto.dosya_yolu}`;
+                
+                let skorHTML = "";
+                if (isSearchResult && foto.uzaklik_skoru !== undefined) {
+                    skorHTML = `<span class="alaka-skoru">%${((1 - foto.uzaklik_skoru) * 100).toFixed(0)} Eşleşme</span>`;
+                }
+
+                kart.innerHTML = `
+                    <img src="${resimUrl}" alt="${foto.baslik}">
+                    <div class="photo-overlay">
+                        <h3>${foto.baslik}</h3>
+                        <p>${foto.aciklama}</p>
+                        <div class="card-actions">
+                            ${skorHTML}
+                            <button onclick="fotoSil(${foto.id}, event)" class="btn-delete-icon" title="Sil">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                galeriDiv.appendChild(kart);
+            });
+        }
     </script>
 </body>
 </html>

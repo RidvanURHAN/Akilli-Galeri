@@ -97,19 +97,23 @@ def foto_ara(
         # 4. Sonuçları ChromaDB'nin belirlediği "benzerlik" sırasına göre paketle
         son_liste = []
         for i, foto_id in enumerate(id_listesi):
-            # İlgili fotoğrafı SQLite'tan gelen listeden bul
-            foto = next((f for f in fotograflar if f.id == foto_id), None)
-            if foto:
-                son_liste.append({
-                    "id": foto.id,
-                    "baslik": foto.baslik,
-                    "aciklama": foto.aciklama,
-                    "dosya_yolu": foto.dosya_yolu,
-                    "uzaklik_skoru": round(mesafeler[i], 4)
-                })
+            # Önce skoru hesapla
+            skor = round(mesafeler[i], 4)
+            
+            # SADECE skor 1.0'dan küçükse (alakalıysa) işlemlere devam et
+            if skor < 1.0:
+                # İlgili fotoğrafı SQLite'tan gelen listeden bul
+                foto = next((f for f in fotograflar if f.id == foto_id), None)
+                if foto:
+                    son_liste.append({
+                        "id": foto.id,
+                        "baslik": foto.baslik,
+                        "aciklama": foto.aciklama,
+                        "dosya_yolu": foto.dosya_yolu,
+                        "uzaklik_skoru": skor
+                    })
                 
         return {"aranan_kelime": sorgu, "sonuclar": son_liste}
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Arama sırasında hata oluştu: {str(e)}")
 
@@ -118,3 +122,37 @@ def tum_fotograflari_getir(db: Session = Depends(get_db)):
     # Veritabanındaki tüm fotoğrafları listele
     fotolar = db.query(models.Foto).all()
     return fotolar
+
+@router.delete("/foto-sil/{foto_id}")
+def foto_sil(
+    foto_id: int, 
+    db: Session = Depends(get_db), 
+    chroma_collection = Depends(get_chroma)
+):
+    # 1. Fotoğrafı SQLite veritabanında bul
+    foto = db.query(models.Foto).filter(models.Foto.id == foto_id).first()
+    
+    if not foto:
+        raise HTTPException(status_code=404, detail="Silinmek istenen fotoğraf bulunamadı.")
+        
+    dosya_yolu = foto.dosya_yolu
+    
+    try:
+        # 2. Fiziksel dosyayı bilgisayardan (uploads klasöründen) sil
+        if os.path.exists(dosya_yolu):
+            os.remove(dosya_yolu)
+            
+        # 3. Yapay Zeka hafızasından (ChromaDB) sil
+        # Ekleme yaparken ID'yi string'e çevirerek kaydetmiştik ( str(yeni_foto.id) ), silerken de aynı formatı kullanıyoruz.
+        chroma_collection.delete(
+            ids=[str(foto.id)]
+        )
+        
+        # 4. Klasik veritabanından (SQLite) sil
+        db.delete(foto)
+        db.commit()
+        
+        return {"mesaj": f"ID'si {foto_id} olan fotoğraf sistemden tamamen temizlendi."}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Silme işlemi sırasında hata oluştu: {str(e)}")
