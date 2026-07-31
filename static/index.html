@@ -3,431 +3,891 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galeri AI | Yeni Nesil</title>
-    <!-- Modern Geometrik Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <title>Akıllı Galeri | Koyu Tema</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome yüklenememe ihtimaline karşı ikonlara bağımlılığı azalttık -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p+qN4mH2Xqg5z1A3mLqWVsVmn6hVid9Vl+I5j4kHkI8mOaGm1FfL8hpZxfqyPD0kSmK8u27I/IMay7i5f+/4mQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        /* --- YENİ NESİL RENK VE TEMA AYARLARI --- */
         :root {
-            --bg-page: #f8fafc;
-            --surface: #ffffff;
-            --text-dark: #0f172a;
-            --text-gray: #64748b;
-            --accent: #10b981; /* Zümrüt Yeşili Accent */
-            --accent-hover: #059669;
-            --danger: #ef4444;
+            color-scheme: dark;
+            --bg: #06080f;
+            --bg-surface: rgba(18, 24, 39, 0.92);
+            --bg-surface-strong: #111827;
+            --border: rgba(148, 163, 184, 0.12);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent: #67e8f9;
+            --accent-strong: #0ea5e9;
+            --accent-soft: rgba(103, 232, 249, 0.16);
+            --danger: #fb7185;
+            --shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
 
         body {
-            background-color: var(--bg-page);
-            color: var(--text-dark);
             min-height: 100vh;
+            background: radial-gradient(circle at top left, rgba(103, 232, 249, 0.16), transparent 24%),
+                        radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.12), transparent 20%),
+                        linear-gradient(180deg, #06080f 0%, #111827 100%);
+            color: var(--text-primary);
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
         }
 
-        /* --- ÜST MENÜ (HEADER) VE ARAMA --- */
+        .page {
+            width: min(100%, 1360px);
+        }
+
         header {
-            position: sticky;
-            top: 0;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #e2e8f0;
-            padding: 15px 40px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            z-index: 50;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 26px;
         }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-dark);
+        .brand {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 14px;
         }
 
-        .logo i { color: var(--accent); }
+        .brand-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(103, 232, 249, 0.95), rgba(14, 165, 233, 0.92));
+            display: grid;
+            place-items: center;
+            color: #03111f;
+            box-shadow: 0 24px 60px rgba(14, 165, 233, 0.22);
+            font-size: 1.2rem;
+        }
 
-        .search-wrapper {
-            flex: 0 1 500px;
-            position: relative;
+        .brand-name {
+            display: grid;
+            gap: 4px;
+        }
+
+        .brand-name strong {
+            font-size: 1.2rem;
+            letter-spacing: -0.03em;
+        }
+
+        .brand-name span {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .controls {
             display: flex;
-            align-items: center;
-        }
-
-        .search-wrapper input {
-            width: 100%;
-            padding: 14px 20px 14px 45px;
-            border: 2px solid #e2e8f0;
-            border-radius: 50px;
-            font-size: 1rem;
-            background-color: var(--bg-page);
-            transition: all 0.3s;
-        }
-
-        .search-wrapper input:focus {
-            outline: none;
-            border-color: var(--accent);
-            background-color: var(--surface);
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 18px;
-            color: var(--text-gray);
-            font-size: 1.1rem;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 15px;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .btn {
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            font-size: 0.95rem;
+            border: none;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
         }
 
-        .btn-primary { background-color: var(--accent); color: white; }
-        .btn-primary:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
-        
-        .btn-outline { background-color: transparent; border: 2px solid #e2e8f0; color: var(--text-dark); }
-        .btn-outline:hover { background-color: #f1f5f9; }
-
-        /* --- ANA GALERİ ALANI --- */
-        main {
-            padding: 40px;
-            flex: 1;
+        .btn-primary {
+            background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+            color: white;
+            padding: 14px 20px;
+            box-shadow: 0 20px 45px rgba(14, 165, 233, 0.24);
         }
 
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            padding: 14px 20px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            backdrop-filter: blur(12px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .hero {
+            display: grid;
+            gap: 24px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            box-shadow: var(--shadow);
+            border-radius: 32px;
+            padding: 36px;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-top {
+            display: grid;
+            gap: 20px;
+        }
+
+        .hero-title {
+            font-size: clamp(2.4rem, 3.8vw, 4rem);
+            line-height: 0.95;
+            letter-spacing: -0.04em;
+            max-width: 760px;
+        }
+
+        .hero-text {
+            max-width: 680px;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.9;
+        }
+
+        .search-panel {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .search-panel input[type="text"] {
+            width: 100%;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(255,255,255,0.06);
+            border-radius: 18px;
+            padding: 18px 20px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .search-panel input[type="text"]::placeholder {
+            color: rgba(226, 232, 240, 0.62);
+        }
+
+        .search-panel input[type="text"]:focus {
+            outline: none;
+            border-color: rgba(56, 189, 248, 0.7);
+            background: rgba(255,255,255,0.12);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .info-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+            min-height: 140px;
+        }
+
+        .info-card h3 {
+            margin-bottom: 12px;
+            color: #f8fafc;
+            font-size: 1rem;
+        }
+
+        .info-card p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 0.94rem;
+        }
+
+        /* YENİ: Kart Genişlikleri Küçültüldü (280px -> 190px) */
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+            margin-top: 18px;
         }
 
-        /* YENİ KART TASARIMI (OVERLAY) */
+        /* YENİ: Kart Yükseklikleri Küçültüldü (330px -> 230px) */
         .photo-card {
             position: relative;
             border-radius: 20px;
             overflow: hidden;
-            background: #e2e8f0;
-            aspect-ratio: 4/3;
+            min-height: 230px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(15,23,42,0.22));
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .photo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
         }
 
         .photo-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            display: block;
+            transition: transform 0.6s ease;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.05);
         }
 
         .photo-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+            background: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.92) 100%);
             opacity: 0;
             transition: opacity 0.3s ease;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            padding: 25px;
+            gap: 10px;
+        }
+
+        .photo-card:hover .photo-overlay {
+            opacity: 1;
+        }
+
+        .photo-title {
+            font-size: 1.05rem;
+            font-weight: 700;
             color: white;
         }
 
-        .photo-card:hover img { transform: scale(1.08); }
-        .photo-card:hover .photo-overlay { opacity: 1; }
-
-        .photo-overlay h3 { font-size: 1.3rem; margin-bottom: 5px; font-weight: 600; }
-        .photo-overlay p { font-size: 0.9rem; color: #cbd5e1; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-        .card-actions { display: flex; justify-content: space-between; align-items: center; }
-        
-        .btn-delete-icon {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-            border: none;
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center;
+        .photo-description {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.82);
+            line-height: 1.5;
+            max-height: 4rem;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
-        .btn-delete-icon:hover { background: var(--danger); color: white; transform: scale(1.1); }
 
-        .alaka-skoru {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(4px);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+        .card-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .score-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.2);
+            color: #dbeafe;
+            font-weight: 700;
+            font-size: 0.75rem;
+            backdrop-filter: blur(8px);
+            align-self: flex-start;
+        }
+
+        /* YENİ: Aksiyon Butonları Metinli Hale Getirildi */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        /* YENİ: Yuvarlak Butonlar Yerine Hap (Pill) Şeklinde Butonlar */
+        .chat-btn, .delete-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 12px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
             font-weight: 600;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            cursor: pointer;
+            border: none;
         }
 
-        /* --- POP-UP (MODAL) EKLEME EKRANI --- */
+        .delete-btn {
+            background: rgba(248, 113, 113, 0.12);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            color: #fecdd3;
+        }
+
+        .delete-btn:hover {
+            background: rgba(248, 113, 113, 0.25);
+            color: white;
+        }
+
+        .chat-btn {
+            background: rgba(14, 165, 233, 0.12);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            color: #7dd3fc;
+        }
+
+        .chat-btn:hover {
+            background: rgba(14, 165, 233, 0.25);
+            color: white;
+        }
+
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(5px);
-            display: none; /* Varsayılan olarak gizli */
+            background: rgba(3, 7, 15, 0.84);
+            display: none;
             align-items: center;
             justify-content: center;
+            padding: 20px;
             z-index: 100;
-            opacity: 0;
-            transition: opacity 0.3s ease;
         }
 
-        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-overlay.active {
+            display: flex;
+        }
 
         .modal-content {
-            background: var(--surface);
-            width: 100%;
-            max-width: 500px;
-            border-radius: 24px;
-            padding: 35px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            transform: translateY(20px);
-            transition: transform 0.3s ease;
+            width: min(100%, 560px);
+            background: rgba(15, 23, 42, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 32px;
+            padding: 32px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(18px);
         }
 
-        .modal-overlay.active .modal-content { transform: translateY(0); }
-
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .modal-header h2 { font-size: 1.5rem; }
-        .close-modal { background: none; border: none; font-size: 1.5rem; color: var(--text-gray); cursor: pointer; }
-
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
-        .form-group input[type="text"], .form-group textarea {
-            width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 1rem;
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 28px;
         }
-        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
-        .form-group textarea { min-height: 100px; resize: vertical; }
-        
-        .file-upload-box {
-            border: 2px dashed #cbd5e1;
-            padding: 30px;
-            text-align: center;
-            border-radius: 16px;
-            background: #f8fafc;
+
+        .modal-header h2 {
+            font-size: 1.4rem;
+            letter-spacing: -0.02em;
+        }
+
+        .close-modal {
+            border: none;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
             cursor: pointer;
-            transition: all 0.2s;
+            font-weight: bold;
         }
-        .file-upload-box:hover { border-color: var(--accent); background: #f0fdf4; }
-        .file-upload-box i { font-size: 2.5rem; color: var(--text-gray); margin-bottom: 10px; display: block; }
-        
-        .modal-footer { margin-top: 30px; display: flex; gap: 10px; }
-        .modal-footer .btn { flex: 1; justify-content: center; }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+            padding: 16px 18px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: rgba(103, 232, 249, 0.8);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .file-upload-box {
+            min-height: 160px;
+            border-radius: 24px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px dashed rgba(56, 189, 248, 0.35);
+            display: grid;
+            place-items: center;
+            text-align: center;
+            padding: 24px 20px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .file-upload-box:hover {
+            transform: translateY(-2px);
+            background: rgba(56, 189, 248, 0.18);
+        }
+
+        .file-upload-box span {
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .status-message {
+            padding: 84px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            grid-column: 1 / -1;
+        }
+
+        /* Chat Modal CSS'leri */
+        .chat-history {
+            max-height: 320px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 8px;
+        }
+        .chat-history::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-history::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+        .chat-msg {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 85%;
+        }
+        .msg-user {
+            background: rgba(14, 165, 233, 0.2);
+            color: #e0f2fe;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .msg-ai {
+            background: rgba(255,255,255,0.06);
+            color: #f1f5f9;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input-group input {
+            flex: 1;
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+            padding: 16px 18px;
+            font-size: 1rem;
+        }
+        .chat-input-group input:focus {
+            outline: none;
+            border-color: rgba(14, 165, 233, 0.8);
+        }
+
+        @media (max-width: 860px) {
+            .hero {
+                padding: 28px;
+            }
+            .search-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 680px) {
+            header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .controls {
+                justify-content: flex-start;
+            }
+        }
+
+        /* 1. Galeri Taşıyıcısı (Grid) Ayarı */
+/* Kendi kodundaki galeri div'inin class veya id ismini buraya yazmalısın (örn: .galeri-container) */
+            .galeri-container {
+                display: grid;
+    /* KRİTİK NOKTA: auto-fit yerine auto-fill kullanıyoruz. 
+       Bu sayede tek resim olsa bile bütün satırı kaplamaz, kendi kutusunda kalır. */
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+/* 2. Fotoğrafın Kendisini Boyutlandırma */
+/* Kendi resim etiketine göre class ismini düzelt (örn: .foto-kart img) */
+            .foto-kart img {
+                width: 100%;
+                height: 250px; /* Fotoğrafların yüksekliğini sabitliyoruz */
+                object-fit: cover; /* RESMİ SÜNDÜRMEDEN, kırparak bu kutunun içine mükemmel sığdırır */
+                border-radius: 10px; /* İsteğe bağlı: Köşeleri yumuşatır */
+            }
 
     </style>
 </head>
 <body>
+    <div class="page">
+        <header>
+            <div class="brand">
+                <div class="brand-icon">📸</div>
+                <div class="brand-name">
+                    <strong>Akıllı Galeri</strong>
+                    <span>Şık, koyu tema ve AI destekli arama</span>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-secondary" onclick="fotograflariGetir()">Yenile</button>
+                <button class="btn btn-primary" onclick="modalAc()">+ Yeni Fotoğraf</button>
+            </div>
+        </header>
 
-    <!-- YÜZEN ÜST MENÜ -->
-    <header>
-        <div class="logo">
-            <i class="fa-solid fa-leaf"></i> Galeri AI
-        </div>
-        
-        <div class="search-wrapper">
-            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" id="sorgu" placeholder="Ne görmek istersiniz? (Örn: Deniz kenarında bir ev)" onkeydown="if(event.key === 'Enter') fotoAra()">
-        </div>
+        <section class="hero">
+            <div class="hero-top">
+                <div>
+                    <h1 class="hero-title">Karanlık modda zarif ve güçlü bir görsel galeri.</h1>
+                    <p class="hero-text">Yüklediğiniz fotoğrafları yapay zeka destekli arama ile keşfedin, galeriyi modern ve profesyonel bir arayüzle yönetin. Tüm deneyim koyu temada, göz yormayan bir düzenle tasarlandı.</p>
+                </div>
+                
+                <div class="search-panel">
+                    <input id="sorgu" type="text" placeholder="Aramak için yazın: gece sokakları, sıcak portre..." onkeydown="if(event.key === 'Enter') fotoAra()">
+                    <button class="btn btn-primary" onclick="fotoAra()">Ara</button>
+                    
+                    <input type="file" id="gorselAramaInput" accept="image/*" style="display: none;" onchange="gorselIleAra(this)">
+                    <button class="btn btn-secondary" onclick="document.getElementById('gorselAramaInput').click()" title="Görsel ile Ara">
+                        Görsel Seç
+                    </button>
+                </div>
 
-        <div class="header-actions">
-            <button onclick="fotograflariGetir()" class="btn btn-outline" title="Sıfırla">
-                <i class="fa-solid fa-house"></i>
-            </button>
-            <button onclick="modalAc()" class="btn btn-primary">
-                <i class="fa-solid fa-plus"></i> Yeni Ekle
-            </button>
-        </div>
-    </header>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>AI ile Anlamlı Arama</h3>
+                        <p>Görsellerinizi açıklama bazlı olarak arayın; sadece etiket değil, içeriğe dayalı sonuçlar sunar.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Göz Yormayan Tasarım</h3>
+                        <p>Koyu tema, modern kartlar ve şık geçişler sayesinde galeriniz profesyonel bir sunuma dönüşür.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Hızlı Yönetim</h3>
+                        <p>Tek tıkla yükleyin, sonuçları inceleyin ve istemediğiniz görselleri kolayca sistemden kaldırın.</p>
+                    </div>
+                </div>
+            </div>
 
-    <!-- ANA GALERİ -->
-    <main>
-        <div id="galeri" class="gallery-grid">
-            <!-- Fotoğraflar Buraya Eklenecek -->
-        </div>
-    </main>
+            <div id="galeri" class="gallery-grid">
+                <!-- Fotoğraflar buraya yüklenecek -->
+            </div>
+        </section>
+    </div>
 
-    <!-- YENİ EKLEME MODALI (POP-UP) -->
+    <!-- Ekleme Modalı -->
     <div class="modal-overlay" id="addModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Yapay Zekaya Görsel Yükle</h2>
-                <button class="close-modal" onclick="modalKapat()"><i class="fa-solid fa-xmark"></i></button>
+                <h2>Yeni Görsel Yükle</h2>
+                <button class="close-modal" onclick="modalKapat()">X</button>
             </div>
-            
             <form id="uploadForm">
                 <div class="form-group">
-                    <label>Başlık</label>
-                    <input type="text" id="baslik" placeholder="Görselin kısa adı..." required>
+                    <label for="baslik">Başlık</label>
+                    <input id="baslik" type="text" placeholder="Fotoğraf başlığını girin" required>
                 </div>
-                
                 <div class="form-group">
-                    <label>Detaylı Yapay Zeka Açıklaması</label>
-                    <textarea id="aciklama" placeholder="Fotoğraftaki her detayı anlatın..." required></textarea>
+                    <label for="aciklama">Açıklama</label>
+                    <textarea id="aciklama" placeholder="Görselin hikayesini kısa ve net yazın" required></textarea>
                 </div>
-
                 <div class="form-group">
+                    <label>Fotoğraf</label>
                     <div class="file-upload-box" onclick="document.getElementById('dosya').click()">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <span id="file-name">Bilgisayardan bir fotoğraf seçin</span>
-                        <input type="file" id="dosya" accept="image/*" required style="display: none;" onchange="dosyaSecildi(this)">
+                        <span id="file-name" style="font-size: 1.2rem; font-weight: 600;">+ Dosya Seçin</span>
+                        <input id="dosya" type="file" accept="image/*" required style="display:none;" onchange="dosyaSecildi(this)">
                     </div>
                 </div>
-
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" onclick="modalKapat()">İptal</button>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">Kaydet ve İşle</button>
+                    <button type="button" class="btn btn-secondary" onclick="modalKapat()">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Yükle ve Kaydet</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", fotograflariGetir);
+    <!-- Sohbet Modalı -->
+    <div class="modal-overlay" id="chatModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Yapay Zeka ile Sohbet</h2>
+                <button class="close-modal" onclick="sohbetKapat()">X</button>
+            </div>
+            <div class="chat-history" id="chatHistory">
+                <!-- Mesajlar buraya gelecek -->
+            </div>
+            <div class="chat-input-group">
+                <input type="text" id="chatInput" placeholder="Fotoğrafla ilgili sorunuzu yazın..." onkeydown="if(event.key === 'Enter') mesajGonder()">
+                <button class="btn btn-primary" onclick="mesajGonder()">Gönder</button>
+            </div>
+        </div>
+    </div>
 
-        // MODAL YÖNETİMİ
-        function modalAc() { document.getElementById("addModal").classList.add("active"); }
-        function modalKapat() { document.getElementById("addModal").classList.remove("active"); }
-        function dosyaSecildi(input) { 
-            const fileName = input.files[0] ? input.files[0].name : "Bilgisayardan bir fotoğraf seçin";
-            document.getElementById("file-name").innerText = fileName;
+    <script>
+        document.addEventListener('DOMContentLoaded', fotograflariGetir);
+
+        // --- GÖRSEL YÜKLEME VE YÖNETİM ---
+        function modalAc() {
+            document.getElementById('addModal').classList.add('active');
         }
 
-        // FOTOĞRAFLARI GETİR
+        function modalKapat() {
+            document.getElementById('addModal').classList.remove('active');
+        }
+
+        function dosyaSecildi(input) {
+            const fileName = input.files[0] ? input.files[0].name : '+ Dosya Seçin';
+            document.getElementById('file-name').innerText = fileName;
+        }
+
         async function fotograflariGetir() {
-            document.getElementById("sorgu").value = "";
-            document.getElementById("galeri").innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #64748b;'>Fotoğraflar yükleniyor...</p>";
+            document.getElementById('sorgu').value = '';
+            const galeri = document.getElementById('galeri');
+            galeri.innerHTML = '<div class="status-message">Fotoğraflar yükleniyor...</div>';
             try {
                 const response = await fetch('/fotograflar/');
                 const data = await response.json();
                 arayuzuGuncelle(data);
             } catch (error) {
-                console.error("Hata:", error);
+                galeri.innerHTML = '<div class="status-message">Fotoğraflar yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.</div>';
+                console.error('Hata:', error);
             }
         }
 
-        // ARAMA YAP
         async function fotoAra() {
-            const sorgu = document.getElementById("sorgu").value;
+            const sorgu = document.getElementById('sorgu').value.trim();
             if (!sorgu) return;
 
-            document.getElementById("galeri").innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #10b981;'><i class='fa-solid fa-spinner fa-spin'></i> AI Vektörleri tarıyor...</p>";
-
+            const galeri = document.getElementById('galeri');
+            galeri.innerHTML = '<div class="status-message">Yapay zeka sonuçları aranıyor...</div>';
             try {
                 const response = await fetch(`/ara/?sorgu=${encodeURIComponent(sorgu)}`);
+                const data = await response.json();
+                if (data.sonuclar && data.sonuclar.length > 0) {
+                    arayuzuGuncelle(data.sonuclar, true);
+                } else {
+                    galeri.innerHTML = '<div class="status-message">Bu arama için sonuç bulunamadı.</div>';
+                }
+            } catch (error) {
+                galeri.innerHTML = '<div class="status-message">Arama sırasında bir hata oluştu. Lütfen tekrar deneyin.</div>';
+                console.error('Arama hatası:', error);
+            }
+        }
+
+        async function gorselIleAra(input) {
+            if (!input.files || input.files.length === 0) return;
+            
+            const dosya = input.files[0];
+            const galeri = document.getElementById('galeri');
+            
+            galeri.innerHTML = '<div class="status-message">Yüklediğiniz görsel yapay zeka ile analiz ediliyor...</div>';
+            
+            const formData = new FormData();
+            formData.append('dosya', dosya);
+            
+            try {
+                const response = await fetch('/gorsel-ara/', {
+                    method: 'POST',
+                    body: formData
+                });
+                
                 const data = await response.json();
                 
                 if (data.sonuclar && data.sonuclar.length > 0) {
                     arayuzuGuncelle(data.sonuclar, true);
                 } else {
-                    document.getElementById("galeri").innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #64748b;"><i class="fa-regular fa-image" style="font-size: 3rem; margin-bottom:15px;"></i><h3>Sonuç Bulunamadı</h3></div>`;
+                    galeri.innerHTML = '<div class="status-message">Bu görsele benzer bir sonuç bulunamadı.</div>';
                 }
             } catch (error) {
-                console.error("Arama hatası:", error);
+                galeri.innerHTML = '<div class="status-message">Görsel aranırken bir hata oluştu. Lütfen tekrar deneyin.</div>';
+                console.error('Görsel arama hatası:', error);
             }
+            
+            input.value = '';
         }
 
-        // FOTOĞRAF YÜKLE
-        document.getElementById("uploadForm").addEventListener("submit", async function(e) {
-            e.preventDefault();
-            const submitBtn = document.getElementById("submitBtn");
-            submitBtn.innerText = "Yükleniyor...";
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerText = 'Yükleniyor...';
             submitBtn.disabled = true;
 
             const formData = new FormData();
-            formData.append("baslik", document.getElementById("baslik").value);
-            formData.append("aciklama", document.getElementById("aciklama").value);
-            formData.append("dosya", document.getElementById("dosya").files[0]);
+            formData.append('baslik', document.getElementById('baslik').value);
+            formData.append('aciklama', document.getElementById('aciklama').value);
+            formData.append('dosya', document.getElementById('dosya').files[0]);
 
             try {
                 const response = await fetch('/foto-ekle/', { method: 'POST', body: formData });
                 if (response.ok) {
                     this.reset();
-                    document.getElementById("file-name").innerText = "Bilgisayardan bir fotoğraf seçin";
+                    document.getElementById('file-name').innerText = '+ Dosya Seçin';
                     modalKapat();
                     fotograflariGetir();
                 } else {
-                    alert("Yükleme başarısız oldu.");
+                    alert('Yükleme başarısız oldu. Lütfen tüm alanların dolu olduğundan emin olun.');
                 }
             } catch (error) {
-                console.error("Yükleme hatası:", error);
+                console.error('Yükleme hatası:', error);
+                alert('Yükleme sırasında bir hata oluştu. Lütfen tekrar deneyin.');
             } finally {
-                submitBtn.innerText = "Kaydet ve İşle";
+                submitBtn.innerText = 'Yükle ve Kaydet';
                 submitBtn.disabled = false;
             }
         });
 
-        // FOTOĞRAF SİL
         async function fotoSil(id, event) {
-            event.stopPropagation(); // Karta tıklama olayını engelle
-            if (!confirm("Bu fotoğrafı kalıcı olarak silmek istediğinize emin misiniz?")) return; 
+            event.stopPropagation();
+            if (!confirm('Bu fotoğrafı kalıcı olarak silmek istediğinize emin misiniz?')) return;
 
             try {
                 const response = await fetch(`/foto-sil/${id}`, { method: 'DELETE' });
-                if (response.ok) fotograflariGetir(); 
+                if (response.ok) {
+                    fotograflariGetir();
+                } else {
+                    alert('Silme işlemi gerçekleştirilemedi. Lütfen tekrar deneyin.');
+                }
             } catch (error) {
-                console.error("Silme hatası:", error);
+                console.error('Silme hatası:', error);
             }
         }
 
-        // ARAYÜZÜ ÇİZ (YENİ OVERLAY KART YAPISI)
-        function arayuzuGuncelle(fotograflar, isSearchResult = false) {
-            const galeriDiv = document.getElementById("galeri");
-            galeriDiv.innerHTML = ""; 
+        // --- YAPAY ZEKA SOHBET ---
+        let aktifFotoId = null;
 
-            if(fotograflar.length === 0) {
-                galeriDiv.innerHTML = "<div style='grid-column: 1/-1; text-align: center; color: #64748b;'>Galeri henüz boş. Sağ üstten yeni bir fotoğraf ekleyin.</div>";
+        function sohbetAc(id, event) {
+            event.stopPropagation();
+            aktifFotoId = id;
+            document.getElementById('chatHistory').innerHTML = '<div class="chat-msg msg-ai">Merhaba! Bu fotoğrafla ilgili bana istediğinizi sorabilirsiniz.</div>';
+            document.getElementById('chatInput').value = '';
+            document.getElementById('chatModal').classList.add('active');
+            setTimeout(() => document.getElementById('chatInput').focus(), 100);
+        }
+
+        function sohbetKapat() {
+            document.getElementById('chatModal').classList.remove('active');
+            aktifFotoId = null;
+        }
+
+        async function mesajGonder() {
+            const input = document.getElementById('chatInput');
+            const mesaj = input.value.trim();
+            if (!mesaj || !aktifFotoId) return;
+
+            const chatHistory = document.getElementById('chatHistory');
+            
+            chatHistory.innerHTML += `<div class="chat-msg msg-user">${mesaj}</div>`;
+            input.value = '';
+            
+            const loadingId = 'loading-' + Date.now();
+            chatHistory.innerHTML += `<div id="${loadingId}" class="chat-msg msg-ai">Gemini inceliyor...</div>`;
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            try {
+                const formData = new FormData();
+                formData.append('soru', mesaj);
+
+                const response = await fetch(`/foto-sohbet/${aktifFotoId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+                chatHistory.innerHTML += `<div class="chat-msg msg-ai">${data.cevap}</div>`;
+            } catch (error) {
+                document.getElementById(loadingId).remove();
+                chatHistory.innerHTML += `<div class="chat-msg msg-ai" style="color: #fb7185;">Bağlantı hatası oluştu. Lütfen tekrar deneyin.</div>`;
+            }
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // --- ARAYÜZ GÜNCELLEME (YENİLENEN BUTONLARLA) ---
+        function arayuzuGuncelle(fotograflar, isSearchResult = false) {
+            const galeriDiv = document.getElementById('galeri');
+            galeriDiv.innerHTML = '';
+
+            if (!fotograflar || fotograflar.length === 0) {
+                galeriDiv.innerHTML = '<div class="status-message">Henüz galeride bir öğe yok. Yeni bir fotoğraf ekleyerek başlayın.</div>';
                 return;
             }
 
             fotograflar.forEach(foto => {
-                const kart = document.createElement("div");
-                kart.className = "photo-card";
-                
+                const kart = document.createElement('div');
+                kart.className = 'photo-card';
                 const resimUrl = foto.dosya_yolu.startsWith('/') ? foto.dosya_yolu : `/${foto.dosya_yolu}`;
                 
-                let skorHTML = "";
-                if (isSearchResult && foto.uzaklik_skoru !== undefined) {
-                    skorHTML = `<span class="alaka-skoru">%${((1 - foto.uzaklik_skoru) * 100).toFixed(0)} Eşleşme</span>`;
-                }
+                const skorHTML = isSearchResult && foto.eslesme_yuzdesi !== undefined ? `<span class="score-badge">Eşleşme: %${foto.eslesme_yuzdesi}</span>` : '';
 
+                /* YENİ: Butonlara ikon yerine metin eklendi */
                 kart.innerHTML = `
                     <img src="${resimUrl}" alt="${foto.baslik}">
                     <div class="photo-overlay">
-                        <h3>${foto.baslik}</h3>
-                        <p>${foto.aciklama}</p>
-                        <div class="card-actions">
+                        <div class="photo-title">${foto.baslik}</div>
+                        <div class="photo-description">${foto.aciklama}</div>
+                        <div class="card-footer">
                             ${skorHTML}
-                            <button onclick="fotoSil(${foto.id}, event)" class="btn-delete-icon" title="Sil">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
+                            <div class="action-buttons">
+                                <button onclick="sohbetAc(${foto.id}, event)" class="chat-btn" title="Yapay Zeka ile Sohbet">
+                                    Sohbet
+                                </button>
+                                <button onclick="fotoSil(${foto.id}, event)" class="delete-btn" title="Sil">
+                                    Sil
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
+
                 galeriDiv.appendChild(kart);
             });
         }

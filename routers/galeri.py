@@ -1,108 +1,63 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-import shutil # Dosyayı kaydetmek için Python'un yerleşik kütüphanesi
-import os
-import time
 from sqlalchemy.orm import Session
+from PIL import Image
+import os
+import io
 
-# Senin yapına göre importlar (ai_service ana dizinde olduğu için direkt çağırıyoruz)
+# Kendi proje yapına göre olan importlar
 from database import get_db, get_chroma
-from ai_service import get_embedding
-import models, schemas
+import models
+from ai_service import get_text_embedding, get_image_embedding, gemini_foto_analiz
 
-router = APIRouter() # İçinde prefix olmasın
+router = APIRouter()
 
-@router.post("/foto-ekle/")
-def foto_ekle(
-    baslik: str = Form(...), 
-    aciklama: str = Form(...), 
-    dosya: UploadFile = File(...), 
-    db: Session = Depends(get_db), 
-    chroma_collection = Depends(get_chroma)
-):
-    # 1. Dosyayı Bilgisayara Kaydet
-    # Aynı isimli dosyalar çakışmasın diye ismin başına zaman damgası ekliyoruz
-    zaman_damgasi = int(time.time())
-    yeni_dosya_adi = f"{zaman_damgasi}_{dosya.filename}"
-    dosya_yolu = f"uploads/{yeni_dosya_adi}"
-    
-    # Dosyayı fiziksel olarak uploads klasörüne yazıyoruz
-    with open(dosya_yolu, "wb") as buffer:
-        shutil.copyfileobj(dosya.file, buffer)
-
-    # 2. SQLite'a Kayıt (Artık gerçek dosya yolunu kaydediyoruz)
-    yeni_foto = models.Foto(
-        baslik=baslik, 
-        aciklama=aciklama, 
-        dosya_yolu=dosya_yolu # Örn: uploads/16912345_kopek.jpg
-    )
-    db.add(yeni_foto)
-    db.commit()
-    db.refresh(yeni_foto) 
-    
-    try:
-        # 3. Vektör Üretimi
-        vektor = get_embedding(aciklama)
-        
-        # 4. ChromaDB'ye Kayıt
-        chroma_collection.add(
-            ids=[str(yeni_foto.id)], 
-            embeddings=[vektor],
-            documents=[aciklama],
-            metadatas=[{"sqlite_id": yeni_foto.id, "baslik": baslik, "dosya_yolu": dosya_yolu}]
-        )
-    except Exception as e:
-        # Hata olursa SQLite kaydını ve diske kaydettiğimiz resmi sil
-        db.delete(yeni_foto)
-        db.commit()
-        if os.path.exists(dosya_yolu):
-            os.remove(dosya_yolu)
-        raise HTTPException(status_code=500, detail=f"Vektör hatası: {str(e)}")
-
-    return {
-        "mesaj": "Fotoğraf başarıyla yüklendi ve yapay zeka tarafından işlendi!", 
-        "id": yeni_foto.id,
-        "url": f"/{dosya_yolu}" # Kullanıcıya resmin linkini de veriyoruz
-    }
-
+# ---------------------------------------------------------
+# 1. FOTOĞRAF ARAMA ENDPOINT'İ (Yapay Zeka Destekli)
+# ---------------------------------------------------------
 @router.get("/ara/")
 def foto_ara(
     sorgu: str, 
-    limit: int = 3, 
+    limit: int = 50, # Sınırı 3'ten 50'ye çıkardık (Galeri kapasitene göre 100 de yapabilirsin)
     db: Session = Depends(get_db), 
     chroma_collection = Depends(get_chroma)
 ):
     try:
-        # 1. Kullanıcının arama kelimesini (örn: "sahil") yapay zeka ile vektöre çevir
-        vektor = get_embedding(sorgu)
+        # 1. Kullanıcının arama kelimesini çok dilli model ile vektöre çevir
+        vektor = get_text_embedding(sorgu)
         
-        # 2. Vektör veritabanında bu anlama en yakın 'limit' kadar (varsayılan 3) sonucu ara
+        # 2. Vektör veritabanında (ChromaDB) genişletilmiş limitle ara
         chroma_sonuclar = chroma_collection.query(
             query_embeddings=[vektor],
             n_results=limit
         )
         
-        # Eğer galeri tamamen boşsa
-        if not chroma_sonuclar["ids"][0]:
+        # Eğer galeri boşsa veya ChromaDB sonuç döndürmediyse
+        if not chroma_sonuclar["ids"] or not chroma_sonuclar["ids"][0]:
             return {"mesaj": "Galeri boş veya sonuç bulunamadı.", "sonuclar": []}
             
-        # 3. Bulunan ID'leri alıp SQLite veritabanından tam detayları (dosya yolu vs.) çekiyoruz
-        # ChromaDB ID'leri string olarak saklıyordu, SQLite için onları tekrar sayıya (integer) çeviriyoruz
-        # ChromaDB ID'leri string olarak saklıyordu, SQLite için onları tekrar sayıya (integer) çeviriyoruz
+        # Dönen karmaşık ID'leri temizle ve tam sayıya (integer) çevir
         id_listesi = [int(''.join(filter(str.isdigit, id_str))) for id_str in chroma_sonuclar["ids"][0]]
         mesafeler = chroma_sonuclar["distances"][0]
         
-        # Fotoğrafları klasik veritabanından toplu olarak getir
+        # Eşleşen ID'lere sahip fotoğrafları SQLite veritabanından topluca getir
         fotograflar = db.query(models.Foto).filter(models.Foto.id.in_(id_listesi)).all()
         
-        # 4. Sonuçları ChromaDB'nin belirlediği "benzerlik" sırasına göre paketle
         son_liste = []
         for i, foto_id in enumerate(id_listesi):
-            # Önce skoru hesapla
-            skor = round(mesafeler[i], 4)
+            skor = mesafeler[i]
             
-            # SADECE skor 1.0'dan küçükse (alakalıysa) işlemlere devam et
-            if skor < 1.0:
-                # İlgili fotoğrafı SQLite'tan gelen listeden bul
+            # Dinamik Yüzde Hesaplama (190 taban, 130 tavan)
+            tavan_puan = 190.0 
+            taban_puan = 130.0 
+            
+            gercek_yuzde = ((tavan_puan - skor) / (tavan_puan - taban_puan)) * 100
+            gercek_yuzde = max(0.0, min(100.0, gercek_yuzde))
+            gercek_yuzde = round(gercek_yuzde, 1)
+
+            print(f"🔍 DEBUG | Foto ID: {foto_id} | Ham Skor: {skor:.4f} | Yüzde: %{gercek_yuzde}")
+
+            # Sadece %15 ve üzeri olan TÜM fotoğraflar listeye eklenir (sayı sınırı yok)
+            if gercek_yuzde >= 15.0:
                 foto = next((f for f in fotograflar if f.id == foto_id), None)
                 if foto:
                     son_liste.append({
@@ -110,49 +65,201 @@ def foto_ara(
                         "baslik": foto.baslik,
                         "aciklama": foto.aciklama,
                         "dosya_yolu": foto.dosya_yolu,
-                        "uzaklik_skoru": skor
+                        "eslesme_yuzdesi": gercek_yuzde
                     })
                 
+        # Sonuçları eşleşme yüzdesine göre yüksekten düşüğe doğru sırala
+        son_liste.sort(key=lambda x: x["eslesme_yuzdesi"], reverse=True)
+        
+        # Eğer ChromaDB'den 50 sonuç gelse bile hiçbiri %15 barajını geçemediyse
+        if not son_liste:
+            return {"mesaj": f"'{sorgu}' araması için yeterince iyi bir eşleşme bulunamadı.", "sonuclar": []}
+
         return {"aranan_kelime": sorgu, "sonuclar": son_liste}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Arama sırasında hata oluştu: {str(e)}")
 
-@router.get("/fotograflar/")
-def tum_fotograflari_getir(db: Session = Depends(get_db)):
-    # Veritabanındaki tüm fotoğrafları listele
-    fotolar = db.query(models.Foto).all()
-    return fotolar
 
-@router.delete("/foto-sil/{foto_id}")
-def foto_sil(
-    foto_id: int, 
-    db: Session = Depends(get_db), 
+@router.post("/gorsel-ara/")
+async def gorsel_ile_ara(
+    dosya: UploadFile = File(...),
+    limit: int = 50,
+    db: Session = Depends(get_db),
     chroma_collection = Depends(get_chroma)
 ):
-    # 1. Fotoğrafı SQLite veritabanında bul
-    foto = db.query(models.Foto).filter(models.Foto.id == foto_id).first()
-    
-    if not foto:
-        raise HTTPException(status_code=404, detail="Silinmek istenen fotoğraf bulunamadı.")
-        
-    dosya_yolu = foto.dosya_yolu
-    
     try:
-        # 2. Fiziksel dosyayı bilgisayardan (uploads klasöründen) sil
-        if os.path.exists(dosya_yolu):
-            os.remove(dosya_yolu)
-            
-        # 3. Yapay Zeka hafızasından (ChromaDB) sil
-        # Ekleme yaparken ID'yi string'e çevirerek kaydetmiştik ( str(yeni_foto.id) ), silerken de aynı formatı kullanıyoruz.
-        chroma_collection.delete(
-            ids=[str(foto.id)]
+        # 1. Kullanıcının gönderdiği dosyayı oku ve PIL Image formatına çevir
+        resim_verisi = await dosya.read()
+        resim = Image.open(io.BytesIO(resim_verisi)).convert("RGB")
+        
+        # 2. Resmi yapay zeka ile vektöre çevir (İşte sihir burada!)
+        vektor = get_image_embedding(resim)
+        
+        # 3. Elde edilen vektörü ChromaDB'de ara
+        chroma_sonuclar = chroma_collection.query(
+            query_embeddings=[vektor],
+            n_results=limit
         )
         
-        # 4. Klasik veritabanından (SQLite) sil
+        if not chroma_sonuclar["ids"] or not chroma_sonuclar["ids"][0]:
+            return {"mesaj": "Galeri boş veya sonuç bulunamadı.", "sonuclar": []}
+            
+        id_listesi = [int(''.join(filter(str.isdigit, id_str))) for id_str in chroma_sonuclar["ids"][0]]
+        mesafeler = chroma_sonuclar["distances"][0]
+        
+        fotograflar = db.query(models.Foto).filter(models.Foto.id.in_(id_listesi)).all()
+        
+        son_liste = []
+        for i, foto_id in enumerate(id_listesi):
+            skor = mesafeler[i]
+            
+            # Öklid mesafesini yüzdelik dilime çevirme (önceden kurguladığımız aynı mantık)
+            tavan_puan = 190.0 
+            taban_puan = 130.0 
+            
+            gercek_yuzde = ((tavan_puan - skor) / (tavan_puan - taban_puan)) * 100
+            gercek_yuzde = max(0.0, min(100.0, gercek_yuzde))
+            gercek_yuzde = round(gercek_yuzde, 1)
+
+            # %15 barajını geçenleri ekle
+            if gercek_yuzde >= 45.0:
+                foto = next((f for f in fotograflar if f.id == foto_id), None)
+                if foto:
+                    son_liste.append({
+                        "id": foto.id,
+                        "baslik": foto.baslik,
+                        "aciklama": foto.aciklama,
+                        "dosya_yolu": foto.dosya_yolu,
+                        "eslesme_yuzdesi": gercek_yuzde
+                    })
+                
+        son_liste.sort(key=lambda x: x["eslesme_yuzdesi"], reverse=True)
+        
+        if not son_liste:
+            return {"mesaj": "Bu görsele yeterince benzeyen bir fotoğraf bulunamadı.", "sonuclar": []}
+
+        return {"aranan_kelime": "Yüklenen Görsel", "sonuclar": son_liste}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Görsel arama sırasında hata oluştu: {str(e)}")
+
+    
+# ---------------------------------------------------------
+# 2. FOTOĞRAF EKLEME ENDPOINT'İ
+# ---------------------------------------------------------
+@router.post("/foto-ekle/")
+async def foto_ekle(
+    dosya: UploadFile = File(...),
+    baslik: str = Form(...),
+    aciklama: str = Form(""),
+    db: Session = Depends(get_db),
+    chroma_collection = Depends(get_chroma)
+):
+    try:
+        # 1. Dosyayı sunucuya (uploads klasörüne) fiziksel olarak kaydet
+        os.makedirs("uploads", exist_ok=True)
+        dosya_yolu = f"uploads/{dosya.filename}"
+        with open(dosya_yolu, "wb") as f:
+            f.write(await dosya.read())
+        
+        # 2. Fotoğraf bilgilerini SQLite veritabanına kaydet
+        yeni_foto = models.Foto(baslik=baslik, aciklama=aciklama, dosya_yolu=dosya_yolu)
+        db.add(yeni_foto)
+        db.commit()
+        db.refresh(yeni_foto)
+        
+        # 3. Resmi PIL kütüphanesi ile aç ve normalize edilmiş CLIP modeli ile vektöre çevir
+        resim = Image.open(dosya_yolu).convert("RGB")
+        vektor = get_image_embedding(resim)
+        
+        # 4. Üretilen vektörü ChromaDB'ye (vektör veritabanına) kaydet
+        chroma_collection.add(
+            embeddings=[vektor],
+            documents=[aciklama or baslik],
+            metadatas=[{"baslik": baslik, "dosya_yolu": dosya_yolu}],
+            ids=[str(yeni_foto.id)]
+        )
+        
+        return {"mesaj": "Fotoğraf başarıyla eklendi!", "id": yeni_foto.id}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fotoğraf eklenirken hata oluştu: {str(e)}")
+
+
+# ---------------------------------------------------------
+# 3. TÜM FOTOĞRAFLARI LİSTELEME ENDPOINT'İ
+# ---------------------------------------------------------
+@router.get("/fotograflar/")
+def fotograflari_getir(db: Session = Depends(get_db)):
+    try:
+        fotograflar = db.query(models.Foto).all()
+        return fotograflar
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fotoğraflar getirilirken hata oluştu: {str(e)}")
+
+
+# ---------------------------------------------------------
+# 4. GEMINI YAPAY ZEKA SOHBET ENDPOINT'İ
+# ---------------------------------------------------------
+@router.post("/foto-sohbet/{foto_id}")
+def foto_sohbet(
+    foto_id: int, 
+    soru: str = Form(...), 
+    db: Session = Depends(get_db)
+):
+    try:
+        # 1. Veritabanından hangi fotoğrafa tıklandığını bul
+        foto = db.query(models.Foto).filter(models.Foto.id == foto_id).first()
+        
+        if not foto:
+            raise HTTPException(status_code=404, detail="Fotoğraf bulunamadı.")
+            
+        print(f"🤖 Gemini'ye soruluyor... Foto Yolu: {foto.dosya_yolu} | Soru: {soru}")
+        
+        # 2. Fotoğrafı ve soruyu Gemini'ye gönder
+        yapay_zeka_cevabi = gemini_foto_analiz(foto.dosya_yolu, soru)
+        
+        print(f"✅ Gemini Cevabı alındı.")
+        
+        # 3. Frontend'in beklediği formatta ("cevap" anahtarıyla) JSON dön
+        return {"cevap": yapay_zeka_cevabi}
+        
+    except Exception as e:
+        print(f"❌ SOHBET HATASI: {str(e)}")
+        return {"cevap": f"Sunucu hatası oluştu: {str(e)}"}
+
+# ---------------------------------------------------------
+# 5. FOTOĞRAF SİLME ENDPOINT'İ (YENİ EKLENEN)
+# ---------------------------------------------------------
+@router.delete("/foto-sil/{foto_id}")
+def fotograf_sil(
+    foto_id: int, 
+    db: Session = Depends(get_db),
+    chroma_collection = Depends(get_chroma)
+):
+    try:
+        # 1. ADIM: İlişkisel Temizlik - SQLite veritabanından fotoğrafı bul
+        foto = db.query(models.Foto).filter(models.Foto.id == foto_id).first()
+        if not foto:
+            raise HTTPException(status_code=404, detail="Silinecek fotoğraf bulunamadı.")
+
+        # 2. ADIM: Fiziksel Temizlik - 'uploads' klasöründen dosyayı sil
+        if os.path.exists(foto.dosya_yolu):
+            os.remove(foto.dosya_yolu)
+
+        # 3. ADIM: Vektör Temizliği - ChromaDB'den fotoğrafın matematiksel kaydını sil
+        try:
+            # ChromaDB ID'leri string olarak saklar, bu yüzden str() ile çeviriyoruz
+            chroma_collection.delete(ids=[str(foto.id)])
+        except Exception as e:
+            print(f"⚠️ ChromaDB'den silinirken uyarı: {e}")
+
+        # Son olarak SQLite veritabanından sil ve işlemi onayla
         db.delete(foto)
         db.commit()
-        
-        return {"mesaj": f"ID'si {foto_id} olan fotoğraf sistemden tamamen temizlendi."}
-        
+
+        return {"mesaj": "Fotoğraf tüm sistemlerden başarıyla silindi."}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Silme işlemi sırasında hata oluştu: {str(e)}")
