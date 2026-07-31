@@ -30,7 +30,11 @@ def get_db():
 chroma_client = chromadb.PersistentClient(path="./chroma_data")
 
 # Koleksiyonumuzu global olarak oluşturuyoruz (yoksa yaratır, varsa getirir)
-chroma_collection = chroma_client.get_or_create_collection(name="galeri_hafizasi")
+# KRİTİK DEĞİŞİKLİK: Uzayı (space) "cosine" olarak belirliyoruz.
+chroma_collection = chroma_client.get_or_create_collection(
+    name="galeri_hafizasi",
+    metadata={"hnsw:space": "cosine"} 
+)
 
 # FastAPI Router'ları için ChromaDB Bağımlılığı (Dependency)
 def get_chroma():
